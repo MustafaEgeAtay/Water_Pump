@@ -1,9 +1,3 @@
-/*
-   Lezzetli Robot Tarifleri
-   Arduino İle Nasıl Kullanılır
-   Kızılötesi Kumanda
-   VİDEO >>> https://lezzetlirobottarifleri.com/tv-kumandasi-ile-arduino-kontrolu
-*/
 
 #include <IRremote.h>
 
