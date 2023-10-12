@@ -1,7 +1,10 @@
 
 #include <IRremote.h>
 
-IRrecv irrecv(6);
+// Change the data pin based on your system.
+#define IRSENSOR_DATA_PIN 6
+
+IRrecv irrecv(IRSENSOR_DATA_PIN);
 
 decode_results results;
 
@@ -33,6 +36,7 @@ void loop()
 {
   if (irrecv.decode(&results))
   {
+    // Prints which button is pressed to serial monitor.
     Serial.println(results.value, HEX);
     irrecv.resume();
   }
