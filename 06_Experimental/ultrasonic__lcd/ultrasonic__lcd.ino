@@ -11,9 +11,9 @@
 #define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
 
 int ultrasonic_o;
-int height ;
+int height=30 ;
 
-bool state;
+bool state=true;
 
 
 
@@ -37,12 +37,20 @@ void loop() {
   Serial.print(sonar.ping_cm()); // Send ping, get distance in cm and print result (0 = outside set distance range)
   Serial.println("cm");
 
+  ultrasonic_o= sonar.ping_cm();
+  Serial.println(ultrasonic_o);
+  
+
     if (state){
 
   lcd.setCursor(0,0);
   lcd.print("Yukseklik:");
-  lcd.setCursor(0,1);
-  lcd.print(height);
+  lcd.setCursor(0, 1); // Set cursor to the first column of the second row
+  lcd.print("        "); // Clear the second row by printing spaces
+  lcd.setCursor(0, 1); // Set cursor to the first column of the second row
+  lcd.print(sonar.ping_cm()); // Print the new number on the second row
+  delay(500);
+
 
 
   } else {
@@ -50,7 +58,7 @@ void loop() {
   lcd.setCursor(0,0);
   lcd.print("istenen:");
   lcd.setCursor(0,1);
-  lcd.print(ultrasonic_o);
+  lcd.print(height);
   
   }
 
