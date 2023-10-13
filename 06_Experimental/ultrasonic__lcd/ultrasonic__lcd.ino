@@ -45,8 +45,10 @@ void loop() {
 
   lcd.setCursor(0,0);
   lcd.print("Yukseklik:");
+    lcd.setCursor(3,1);
+  lcd.print("cm");
   lcd.setCursor(0, 1); // Set cursor to the first column of the second row
-  lcd.print("        "); // Clear the second row by printing spaces
+  lcd.print("  "); // Clear the second row by printing spaces
   lcd.setCursor(0, 1); // Set cursor to the first column of the second row
   lcd.print(sonar.ping_cm()); // Print the new number on the second row
   delay(500);
