@@ -2,7 +2,7 @@
 
 void setup() {
   void Water_Pump_Init(void);
-}
+  }
 
 void loop() {
   // Read GUI inputs from user.

@@ -4,6 +4,12 @@
 #include <NewPing.h>
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
+#include <math.h>
+
+
+#define PWM_PIN 5
+#define IN1 6
+#define IN2 7
 
 #define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN     11  // Arduino pin tied to echo pin on the ultrasonic sensor.
@@ -21,10 +27,17 @@ int previousMode;
 
 int buttonState = 0;
 unsigned long ultrasonic_o;
+int water_level;
 int deger;
 int previousDeger = 0;
 unsigned long changeTime = 0; // Variable to store the time of the last change
 unsigned long waitTime = 3000;
+
+int Error = 0;
+int Integral_Error = 0;
+int Prev_Error=0;
+int Derivative=0;
+
 
 enum menu_state{
     current_distance = 0,
@@ -37,6 +50,37 @@ NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and
 
 LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
+typedef struct{
+    float Kp=30;
+    double Value_Error;
+}P_Object_Typedef;
+
+typedef struct{
+    float Kp=15;
+    float Ki=0.3;
+    double Value_Error;
+}PI_Object_Typedef;
+
+typedef struct{
+    float Kp=27;
+    float Kd=2;
+    double Value_Error;
+}PD_Object_Typedef;
+
+typedef struct{
+    float Kp=25;
+    float Kd=0.5;
+    float Ki=0.3;
+    double Value_Error;
+}PID_Object_Typedef;
+
+P_Object_Typedef P_Object;
+PI_Object_Typedef PI_Object;
+PD_Object_Typedef PD_Object;
+PID_Object_Typedef PID_Object;
+
+
+
 
 void setup() {
     
@@ -47,8 +91,11 @@ void setup() {
   pinMode(LEVER_SWITCH_PIN1,INPUT);
   pinMode(LEVER_SWITCH_PIN2,INPUT);
   pinMode(LEVER_SWITCH_PIN3,INPUT);
-
   menu_current_state = current_distance;
+
+  pinMode(IN1,OUTPUT);
+  pinMode(IN2,OUTPUT);
+  pinMode(PWM_PIN,OUTPUT);
   
 }
 
@@ -56,10 +103,19 @@ void loop() {
 
   // -------------- Read Variables --------------
 
-  deger = analogRead(POTPIN)/56;
+  deger = analogRead(POTPIN)/84;
   
   ultrasonic_o = sonar.ping_cm();
+
+  water_level = 12 - ultrasonic_o;
+  water_level = fabs(water_level);
+
+
+  Error = deger-water_level;
+  Integral_Error+= Error; 
+  Derivative = Error-Prev_Error;
  
+  
 
   pressSwitch[2] = digitalRead(LEVER_SWITCH_PIN1);
   pressSwitch[1] = digitalRead(LEVER_SWITCH_PIN2);
@@ -108,6 +164,8 @@ void loop() {
     lcd.setCursor(0, 1);
     lcd.print(mode);
     delay(50);
+    Integral_Error= 0; 
+    Derivative = 0;
   
     // Record the time of the change
     if(mode != previousMode){
@@ -134,7 +192,7 @@ void loop() {
     lcd.setCursor(0, 1);
     
     
-    lcd.print(ultrasonic_o);
+    lcd.print(water_level);
     delay(100);
 
     
@@ -143,6 +201,289 @@ void loop() {
   // -------------- LCD Screen Output --------------
   
     Serial.println(mode);
+
+  //-------------------Controls
+
+
+  switch(mode){
+
+    case 0:
+      //on-off
+
+      if (Error>0){
+
+        digitalWrite(IN1,HIGH);
+        digitalWrite(IN2,LOW);
+        analogWrite(PWM_PIN,200);
+          
+
+      }else if (Error<0) {
+
+        digitalWrite(IN1,LOW);
+        digitalWrite(IN2,HIGH);
+        analogWrite(PWM_PIN,200); 
+
+      }else if (Error ==0){
+
+        analogWrite(PWM_PIN,0); 
+
+      }
     
+    break;
+
+    case 1:
+      //p
+
+
+      P_Object.Value_Error =  P_Object.Kp*Error;
+
+      if (Error>0){
+
+        digitalWrite(IN1,HIGH);
+        digitalWrite(IN2,LOW);
+
+
+        if (P_Object.Value_Error>200){
+
+          P_Object.Value_Error=200;
+
+        }else if (P_Object.Value_Error<90){
+
+          P_Object.Value_Error=0;
+
+        }
+        
+
+      
+        analogWrite(PWM_PIN,P_Object.Value_Error);
+          
+
+      }else if (Error<0){
+
+        digitalWrite(IN1,LOW);
+        digitalWrite(IN2,HIGH);
+        
+
+          if (P_Object.Value_Error<-200){
+
+          P_Object.Value_Error=-200;
+
+        }else if (P_Object.Value_Error>-90){
+
+          P_Object.Value_Error=0;
+
+        } 
+
+        analogWrite(PWM_PIN,fabs(P_Object.Value_Error));
+
+      }else if(Error==0){
+
+        analogWrite(PWM_PIN,0);
+        
+      }
+      
+    break;
+
+    case 2:
+
+      
+
+      PI_Object.Value_Error =  PI_Object.Kp*Error + PI_Object.Ki*Integral_Error;
+
+      if (Error>0){
+
+        digitalWrite(IN1,HIGH);
+        digitalWrite(IN2,LOW);
+
+
+      if (PI_Object.Value_Error>200){
+
+        PI_Object.Value_Error=200;
+
+      }else if (PI_Object.Value_Error<90){
+
+        PI_Object.Value_Error=0;
+
+      }
+
+       analogWrite(PWM_PIN,PI_Object.Value_Error);
+          
+
+      }else if (Error<0){
+
+        digitalWrite(IN1,LOW);
+        digitalWrite(IN2,HIGH);
+        
+
+          if (PI_Object.Value_Error<-200){
+
+          PI_Object.Value_Error=-200;
+
+        }else if (PI_Object.Value_Error>-90){
+
+          PI_Object.Value_Error=0;
+
+        } 
+
+        analogWrite(PWM_PIN,fabs(PI_Object.Value_Error));
+
+      }else if(Error==0){
+
+        analogWrite(PWM_PIN,0);
+        
+      }
+
+    break;
+
+    case 3:
+
+      PD_Object.Value_Error =  PD_Object.Kp*Error + PD_Object.Kd*Derivative;
+      Prev_Error = Error;
+
+      if (Error>0){
+
+        digitalWrite(IN1,HIGH);
+        digitalWrite(IN2,LOW);
+
+
+      if (PD_Object.Value_Error>200){
+
+        PD_Object.Value_Error=200;
+
+      }else if (PD_Object.Value_Error<90){
+
+        PD_Object.Value_Error=0;
+
+      }
+
+       analogWrite(PWM_PIN,PD_Object.Value_Error);
+          
+
+      }else if (Error<0){
+
+        digitalWrite(IN1,LOW);
+        digitalWrite(IN2,HIGH);
+        
+
+          if (PD_Object.Value_Error<-200){
+
+          PD_Object.Value_Error=-200;
+
+        }else if (PD_Object.Value_Error>-90){
+
+          PD_Object.Value_Error=0;
+
+        } 
+
+        analogWrite(PWM_PIN,fabs(PD_Object.Value_Error));
+
+      }else if(Error==0){
+
+        analogWrite(PWM_PIN,0);
+        
+      }
+    
+    break;
+
+    case 4:
+
+      PID_Object.Value_Error =  PID_Object.Kp*Error + PID_Object.Kd*Derivative + PID_Object.Ki*Integral_Error;
+      Prev_Error = Error;
+
+      if (Error>0){
+
+        digitalWrite(IN1,HIGH);
+        digitalWrite(IN2,LOW);
+
+
+      if (PID_Object.Value_Error>200){
+
+        PID_Object.Value_Error=200;
+
+      }else if (PID_Object.Value_Error<90){
+
+        PID_Object.Value_Error=0;
+
+      }
+
+       analogWrite(PWM_PIN,PID_Object.Value_Error);
+          
+
+      }else if (Error<0){
+
+        digitalWrite(IN1,LOW);
+        digitalWrite(IN2,HIGH);
+        
+
+          if (PID_Object.Value_Error<-200){
+
+          PID_Object.Value_Error=-200;
+
+        }else if (PID_Object.Value_Error>-90){
+
+          PID_Object.Value_Error=0;
+
+        } 
+
+        analogWrite(PWM_PIN,fabs(PID_Object.Value_Error));
+
+      }else if(Error==0){
+
+        analogWrite(PWM_PIN,0);
+        
+      }      
+
+    default:
+
+    break;
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+  }
+
+
+
+
+    
+
+
+
+
+
+/*int deger = 0;
+
+void setup() {
+  pinMode(IN1,OUTPUT);
+  pinMode(IN2,OUTPUT);
+  pinMode(PWM_PIN,OUTPUT);
+  // IN1 ve IN2 yön ayarlama pinleridir.
+  digitalWrite(IN1,HIGH);
+  digitalWrite(IN2,LOW);
 }
+void loop() {
+  deger = 180; // ADC hattını oku
+  // Gelen değeri işle. Motor sürücüye alakalı PWM değerini bas.
+  analogWrite(PWM_PIN,deger); 
+}*/
+
+
+
+
+
+
+
+
+
+
 

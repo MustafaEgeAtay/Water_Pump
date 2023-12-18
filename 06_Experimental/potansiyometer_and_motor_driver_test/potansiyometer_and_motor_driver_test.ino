@@ -6,10 +6,10 @@
 // verinin karşılaştırılması sonucu çıkan hatanın kontrol denklemine
 // sokularak PWM hattından orantılı değerler verilmesi ile sağlanacaktır.
 
-#define POTPIN A0
-#define PWM_PIN 9
-#define IN1 7
-#define IN2 6
+
+#define PWM_PIN 5
+#define IN1 6
+#define IN2 7
 
 int deger = 0;
 
@@ -22,7 +22,7 @@ void setup() {
   digitalWrite(IN2,LOW);
 }
 void loop() {
-  deger = analogRead(POTPIN); // ADC hattını oku
+  deger = 180; // ADC hattını oku
   // Gelen değeri işle. Motor sürücüye alakalı PWM değerini bas.
-  analogWrite(PWM_PIN,floor(deger / 4)); 
+  analogWrite(PWM_PIN,deger); 
 }

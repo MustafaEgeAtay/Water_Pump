@@ -51,6 +51,8 @@ void Water_Pump_Init(void){
   pinMode(LEVER_SWITCH_PIN1,INPUT);
   pinMode(LEVER_SWITCH_PIN2,INPUT);
   pinMode(LEVER_SWITCH_PIN3,INPUT);  
+  Serial.println("Water_Pumo_Init works");
+
 }
 
 /*******************************************************************************
@@ -68,7 +70,8 @@ void Water_Pump_Read_Inputs(void){
   Switch_Input[2] = digitalRead(LEVER_SWITCH_PIN1);
   Switch_Input[1] = digitalRead(LEVER_SWITCH_PIN2);
   Switch_Input[0] = digitalRead(LEVER_SWITCH_PIN3);
-  Control_Mode = 4*Switch_Input[2] + 2*Switch_Input[1] + Switch_Input[0];  
+  Control_Mode = 4*Switch_Input[2] + 2*Switch_Input[1] + Switch_Input[0]; 
+  Serial.println("Water_Pump_Read_Inputs works"); 
 }
 
 /*******************************************************************************
@@ -137,6 +140,9 @@ void Water_Pump_LCD_Screen_FSM(void){
     // delay(500);
     lcd.print(ultrasonic_o);
   }
+
+  Serial.println("Water_Pump_LCD_Screen_FSM works"); 
+  
 }
 
  
