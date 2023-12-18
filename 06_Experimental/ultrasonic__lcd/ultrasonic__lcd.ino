@@ -164,14 +164,14 @@ void loop() {
     lcd.setCursor(0, 1);
     lcd.print(mode);
     delay(50);
-    Integral_Error= 0; 
-    Derivative = 0;
   
     // Record the time of the change
     if(mode != previousMode){
         changeTime = millis();
         menu_current_state = current_mode;
         previousMode = mode;
+        Integral_Error= 0; 
+        Derivative = 0;
     }
 
     if(millis() - changeTime >= waitTime){
@@ -439,45 +439,7 @@ void loop() {
 
   }
 
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-    
-
-
-
-
-
-/*int deger = 0;
-
-void setup() {
-  pinMode(IN1,OUTPUT);
-  pinMode(IN2,OUTPUT);
-  pinMode(PWM_PIN,OUTPUT);
-  // IN1 ve IN2 yön ayarlama pinleridir.
-  digitalWrite(IN1,HIGH);
-  digitalWrite(IN2,LOW);
 }
-void loop() {
-  deger = 180; // ADC hattını oku
-  // Gelen değeri işle. Motor sürücüye alakalı PWM değerini bas.
-  analogWrite(PWM_PIN,deger); 
-}*/
-
-
 
 
 
